@@ -1,56 +1,70 @@
 ﻿using SQLite;
 using MauiDataAccess.Models;
 using System.Collections.ObjectModel;
+using Newtonsoft.Json;
 
 namespace MauiDataAccess.DataAccess
 {
     // Ensure there is only one definition of PersonData in this namespace
     public class PersonData
     {
-        SQLiteAsyncConnection database = null!; // Marked as non-nullable but initialized later
-
-        async Task Init()
+        public async Task<List<Person>> GetPeopleAsync()
         {
-            if (database is not null)
+            HttpClient client;
+
+            try
             {
-                return;
+                client = new HttpClient();
+                client.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "application/json");
+
+                List<Person> people = new List<Person>();
+                var response = await client.GetAsync("http://localhost:4928/api/Person");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    if (!string.IsNullOrEmpty(content))
+                    {
+                        var deserializedPeople = JsonConvert.DeserializeObject<List<Person>>(content);
+                        if (deserializedPeople != null)
+                        {
+                            people = deserializedPeople;
+                        }
+                    }
+                }
+
+                return people;
             }
-            database = new SQLiteAsyncConnection(DatabaseConstants.DatabasePath, DatabaseConstants.Flags);
-            await database.CreateTableAsync<Person>();
-        }
-
-        public async Task<ObservableCollection<Person>> GetPeopleAsync()
-        {
-            await Init();
-            var people = await database.Table<Person>().ToListAsync();
-            return new ObservableCollection<Person>(people);
-        }
-
-        public async Task<Person> GetPersonAsync(int id)
-        {
-            await Init();
-            return await database.Table<Person>().Where(i => i.ID == id).FirstOrDefaultAsync();
-        }
-
-        public async Task SavePersonAsync(Person person)
-        {
-            await Init();
-            if (person.ID != 0)
+            catch (Exception)
             {
-                // Update an existing person
-                await database.UpdateAsync(person);
-            }
-            else
-            {
-                // Save a new person
-                await database.InsertAsync(person);
+                // Fix for CS0168 and IDE0059: Removed unused variable 'ex'.
+                throw;
             }
         }
 
-        public async Task DeletePersonAsync(Person person)
+        public async Task<int> SavePersonAsync(Person person)
         {
-            await Init();
-            await database.DeleteAsync(person);
+            HttpClient client;
+
+            try
+            {
+                client = new HttpClient();
+                client.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "application/json");
+
+                var content = JsonConvert.SerializeObject(person);
+                var buff = System.Text.Encoding.UTF8.GetBytes(content);
+                var byteContent = new ByteArrayContent(buff);
+                byteContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/json");
+
+                HttpResponseMessage response = await client.PostAsync("http://localhost:4928/api/Person", byteContent);
+
+                return response.IsSuccessStatusCode ? 1 : 0;
+            }
+            catch (Exception)
+            {
+                // Fix for CS0168 and IDE0059: Removed unused variable 'ex'.
+                throw;
+            }
         }
     }
 }

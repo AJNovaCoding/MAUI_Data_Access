@@ -59,26 +59,12 @@
             ItemsSource="{Binding People}"  
             SelectionMode="Single">  
             <CollectionView.ItemTemplate>  
-                <DataTemplate x:DataType="models:Person">  
-                    <Grid  
-                        RowDefinitions="Auto"  
-                        ColumnDefinitions="Auto,*">  
-                        <Label  
-                            Grid.Row="0"  
-                            Grid.Column="0"  
-                            Text="{Binding FirstName}"  
-                            VerticalTextAlignment="Center"/>  
-                        <Label  
-                            Grid.Row="0"  
-                            Grid.Column="1"  
-                            Text="{Binding LastName}"  
-                            VerticalTextAlignment="Center"/>  
-                        <Label  
-                            Grid.Row="0"  
-                            Grid.Column="2"  
-                            Text="{Binding DoB, StringFormat='{0:MM-dd-yyyy}'}"
-                            VerticalTextAlignment="Center"/>  
-                    </Grid>  
+                <DataTemplate x:DataType="models:Person">
+                    <HorizontalStackLayout Spacing="10">
+                        <Label  Text="{Binding FirstName}"/>  
+                        <Label  Text="{Binding LastName}"/>  
+                        <Label  Text="{Binding DoB, StringFormat='{0:MM-dd-yyyy}'}"/>  
+                    </HorizontalStackLayout>  
                 </DataTemplate>  
             </CollectionView.ItemTemplate>  
         </CollectionView>  
